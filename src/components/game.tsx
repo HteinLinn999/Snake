@@ -7,24 +7,22 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Coordinate, Direction, GestureEventType } from "../types/types";
 import { Dimensions } from "react-native";
 import Snake from "./Snake";
-import { CELL_SIZE, BORDER_WIDTH ,MOVE_INTERVAL} from "../constants/game";
+import { CELL_SIZE, BORDER_WIDTH, MOVE_INTERVAL } from "../constants/game";
 
 //refactoing 
 import { checkGameOver } from "../utils/checkGameOver";
-import { getNextHead } from "../utils/moveSnake";
+import getNextHead from "../utils/moveSnake";
+
+
 
 
 const SNAKE_INITIAL_POSITION = [{ x: 5, y: 5 }];
 const FOOD_INITIAL_POSITION = { x: 5, y: 20 };
 //const GAME_BOUNDS = { xMin: 0, xMax: 22, yMin: 0, yMax: 46 };const MOVE_INTERVAL = 50;
-
-
 // const { width, height } = Dimensions.get("window");
-
 
 export default function Game(): React.JSX.Element {
 
-    
     const [direction, setDirection] = React.useState<Direction>(Direction.Right);
     const [snake, setSnake] = React.useState<Coordinate[]>(SNAKE_INITIAL_POSITION);
     const [food, setFood] = React.useState<Coordinate>(FOOD_INITIAL_POSITION);
@@ -37,7 +35,7 @@ export default function Game(): React.JSX.Element {
         height: 0
     });
 
-    const GAME_BOUNDS = {
+    const GAME_BOUNDS = React.useMemo(() => ({
         xMin: 0,
         xMax:
             Math.floor(
@@ -48,121 +46,53 @@ export default function Game(): React.JSX.Element {
             Math.floor(
                 (gameSize.height - BORDER_WIDTH * 2) / CELL_SIZE
             )
-    };
-
-    React.useEffect(() => {
-
-    if (
-        isGameOver ||
-        isPaused ||
-        gameSize.width === 0 ||
-        gameSize.height === 0
-    ) {
-        return;
-    }
+    }), [gameSize]);
 
 
-    const intervalId = setInterval(() => {
+    const moveSnake = React.useCallback(() => {
 
         setSnake(prev => {
 
-            const snakeHead = prev[0];
+            const head = prev[0];
+            const newHead = getNextHead(head, direction);
+            const gameOver = checkGameOver(newHead, GAME_BOUNDS);
 
-            const newHead = {
-                ...snakeHead
-            };
-
-
-            switch(direction){
-
-                case Direction.Up:
-                    newHead.y -= 1;
-                    break;
-
-                case Direction.Down:
-                    newHead.y += 1;
-                    break;
-
-                case Direction.Left:
-                    newHead.x -= 1;
-                    break;
-
-                case Direction.Right:
-                    newHead.x += 1;
-                    break;
-
-            }
-
-
-
-            if(checkGameOver(newHead, GAME_BOUNDS)){
-
+            if (gameOver) {
                 setIsGameOver(true);
-
                 return prev;
-
             }
-
-
 
             return [
                 newHead,
-                ...prev.slice(0,-1)
+                ...prev.slice(0, -1),
             ];
-
         });
+    }, [direction, GAME_BOUNDS]);
 
 
-    }, MOVE_INTERVAL);
+    React.useEffect(() => {
+        if (
+            isGameOver ||
+            isPaused ||
+            gameSize.width === 0
+        ) {
+            return;
+        }
 
+        const timer = setInterval(
+            moveSnake,
+            MOVE_INTERVAL
+        );
 
+        return () => clearInterval(timer);
 
-    return ()=>clearInterval(intervalId);
-
-
-
-},[
-    isGameOver,
-    isPaused,
-    direction,
-    gameSize
-]);
-    // React.useEffect(() => {
-    //     if (isGameOver || isPaused) return;
-
-    //     const intervalId = setInterval(() => {
-    //         moveSnake();
-    //     }, MOVE_INTERVAL);
-
-    //     return () => clearInterval(intervalId);
-    // }, [isGameOver, isPaused, snake]);
-
-    // const moveSnake = () => {
-    //     const snakeHead = snake[0];
-    //     const newHead = { ...snakeHead };//create a copy        
-
-    //     switch (direction) {
-    //         case Direction.Up: newHead.y -= 1; break;
-    //         case Direction.Down: newHead.y += 1; break;
-    //         case Direction.Left: newHead.x -= 1; break;
-    //         case Direction.Right: newHead.x += 1; break;
-    //         default:
-    //             break;
-    //     }
-
-    //     if (checkGameOver(newHead, GAME_BOUNDS)) {
-    //         //setIsGameOver((prev) => !prev);
-    //         setIsGameOver(true);
-    //         return;
-    //     }
-    //     //if it  eats food 
-    //     //grow the snake and generate new food 
-    //     setSnake(prev => [
-    //         newHead,
-    //         ...prev.slice(0, -1),
-    //     ]);
-    // }
-
+    }, [
+        moveSnake,
+        isGameOver,
+        isPaused,
+        gameSize
+    ]);
+    
     const handleGesture = (event: GestureEventType) => {
         const { translationX, translationY } = event;
         if (Math.abs(translationX) > Math.abs(translationY)) {
@@ -191,15 +121,10 @@ export default function Game(): React.JSX.Element {
         <GestureDetector gesture={pan}>
             <View style={styles.container}>
                 <SafeAreaView style={{ flex: 1 }} >
-                    {/* <View style={styles.boundaries}>
-                        <Snake snake={snake} />
-                    </View> */}
                     <View
                         style={styles.boundaries}
                         onLayout={(event) => {
-
-                            const { width, height } =
-                                event.nativeEvent.layout;
+                            const { width, height } =event.nativeEvent.layout;
                             setGameSize({
                                 width,
                                 height
