@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 interface UseGameLoopProps {
-  callback: () => {};
+  callback: () => void;
   interval: number;
   enabled: boolean;
 }
@@ -16,6 +16,6 @@ export default function useGameLoop({
 
     const timer = setInterval(callback, interval);
     return () => clearInterval(timer);
-    
-  });
+
+  },[callback, interval ,enabled]);
 }

@@ -8,23 +8,23 @@ import Snake from "./Snake";
 import {
     CELL_SIZE,
     BORDER_WIDTH,
-    MOVE_INTERVAL,    
+    MOVE_INTERVAL,
     FOOD_INITIAL_POSITION
 } from "../constants/game";
 import useGameLoop from "../hooks/useGameLoop";
 import useSnake from "../hooks/useSnake";
+import Food from "./Food";
 
 export default function Game(): React.JSX.Element {
 
-//    const [food, setFood] = React.useState<Coordinate>(FOOD_INITIAL_POSITION);
-
     const [isPaused, setIsPaused] = React.useState<boolean>(false);
-    
     const [gameSize, setGameSize] = React.useState({
         width: 0,
         height: 0
     });
 
+    //
+    //xMin,xMax, yMin,yMax  စတာတွေက  screen width , height ပြောင်းမှ ပဲ တွက်ချက်ဖို့လိုတာပါ
     const GAME_BOUNDS = React.useMemo(() => ({
         xMin: 0,
         xMax:
@@ -44,6 +44,7 @@ export default function Game(): React.JSX.Element {
         setDirection,
         moveSnake,
         isGameOver,
+        food,
     } = useSnake({
         bounds: GAME_BOUNDS,
     });
@@ -94,6 +95,7 @@ export default function Game(): React.JSX.Element {
                         }}
                     >
                         <Snake snake={snake} />
+                        <Food x={food.x} y={food.y} />
                     </View>
                 </SafeAreaView>
             </View>
