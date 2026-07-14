@@ -59,10 +59,11 @@ export default function useSnake({ bounds }: UseSnakeProps) {
     score,
     setScore,
     snake,
+    setSnake,
     direction,
     setDirection,
-    moveSnake,
     isGameOver,
     setIsGameOver,
+    moveSnake,
   };
 }

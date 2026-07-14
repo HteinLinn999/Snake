@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../styles/colors";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
@@ -9,11 +9,13 @@ import {
     CELL_SIZE,
     BORDER_WIDTH,
     MOVE_INTERVAL,
-    FOOD_INITIAL_POSITION
+    FOOD_INITIAL_POSITION,
+    SNAKE_INITIAL_POSITION
 } from "../constants/game";
 import useGameLoop from "../hooks/useGameLoop";
 import useSnake from "../hooks/useSnake";
 import Food from "./Food";
+import Header from "./Header";
 
 export default function Game(): React.JSX.Element {
 
@@ -40,11 +42,16 @@ export default function Game(): React.JSX.Element {
 
     const {
         snake,
+        setSnake,
         direction,
         setDirection,
         moveSnake,
         isGameOver,
+        setIsGameOver,
         food,
+        setFood,
+        score,
+        setScore
     } = useSnake({
         bounds: GAME_BOUNDS,
     });
@@ -58,6 +65,17 @@ export default function Game(): React.JSX.Element {
             gameSize.width > 0,
     });
 
+    const pauseGame = () => {
+        setIsPaused(!isPaused);
+    }
+    const reloadGame = () => {
+        setSnake(SNAKE_INITIAL_POSITION);
+        setFood(FOOD_INITIAL_POSITION);
+        setIsGameOver(false);
+        setScore(0);
+        setDirection(Direction.Right);
+        setIsPaused(false);
+    }
 
     const handleGesture = (event: GestureEventType) => {
         const { translationX, translationY } = event;
@@ -87,6 +105,13 @@ export default function Game(): React.JSX.Element {
         <GestureDetector gesture={pan}>
             <View style={styles.container}>
                 <SafeAreaView style={{ flex: 1 }} >
+                    <Header
+                        isPaused={isPaused}
+                        pauseGame={pauseGame}
+                        reloadGame={reloadGame}                        
+                    >
+                        <Text style={styles.scoreStyle}> {score}</Text>
+                    </Header>
                     <View
                         style={styles.boundaries}
                         onLayout={(event) => {
@@ -115,5 +140,11 @@ const styles = StyleSheet.create({
         borderBottomLeftRadius: 30,
         borderBottomRightRadius: 30,
         backgroundColor: Colors.background,
+    },
+    scoreStyle:{
+        fontSize:22,
+        fontWeight:"bold",
+        color:Colors.primary
     }
+    
 });
